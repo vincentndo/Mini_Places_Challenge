@@ -32,11 +32,11 @@ parser.add_argument('--epochs', type=int, default=128,
     help='Total number of epochs to train the network')
 parser.add_argument('--batch', type=int, default=256,
     help='The batch size to use for training')
-parser.add_argument('--lr', type=float, default=0.1,
+parser.add_argument('--lr', type=float, default=0.01,
     help='The initial learning rate')
 parser.add_argument('--gamma', type=float, default=0.1,
     help='Factor by which to drop the learning rate')
-parser.add_argument('--step_size', type=int, default=5,
+parser.add_argument('--step_size', type=int, default=25,
     help='Drop the learning rate every N epochs -- this specifies N')
 parser.add_argument('--momentum', type=float, default=0.9,
     help='The momentum hyperparameter to use for momentum SGD')
@@ -44,14 +44,14 @@ parser.add_argument('--weight_decay', type=float, default=5e-4,
     help='The L2 weight decay coefficient')
 parser.add_argument('--seed', type=int, default=1,
     help='Seed for the random number generator')
-parser.add_argument('--no_cudnn', action='store_true',
+parser.add_argument('--deterministic_cudnn', action='store_true',
     help='Do not use CuDNN -- usually faster, but non-deterministic')
 parser.add_argument('--gpu', type=int, default=0,
     help='GPU ID to use for training and inference (-1 for CPU)')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
-torch.backends.cudnn.enabled = not args.no_cudnn
+torch.backends.cudnn.deterministic = args.deterministic_cudnn
 
 
 def val_net(model, epoch, total_epoch, val_loader):

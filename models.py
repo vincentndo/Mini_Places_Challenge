@@ -29,13 +29,13 @@ class MiniAlexNet(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
         self.fc = nn.Sequential(
-            nn.Linear(256, 256),
+            nn.Linear(256, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(),
-            nn.Linear(256, 256),
+            nn.Linear(1024, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(),
-            nn.Linear(256, 100),
+            nn.Linear(1024, 100),
         )
 
     def forward(self, input):
