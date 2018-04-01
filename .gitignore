@@ -137,3 +137,11 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+development_kit/
+images/
+labels/
+snapshots/
+objects/
+data.tar.gz
+development_kit.tar.gz
