@@ -1,8 +1,8 @@
 # Mini Places Challenge
 
-Due: Wednesday, Mar 8, 2017, 11:55pm
+Due: Wednesday, Apr 22, 2018, 11:59pm
 
-This is Homework 2 for Computer Vision (CS 280) at UC Berkeley.
+This is Homework 4 for Computer Vision (CS 280) at UC Berkeley.
 
 The assignment is to build and train a scene classifier for images.
 The dataset we'll use is the MIT Mini Places dataset,
@@ -25,15 +25,16 @@ You can use the included `get_miniplaces.sh` script, or manually grab from
 ## Example
 
 This repo provides an [example](https://github.com/tinghuiz/CS280MiniPlaces/blob/master/train_places_net.py)
-of using [Caffe](http://caffe.berkeleyvision.org/) to train and evaluate a convnet --
+of using [PyTorch](http://pytorch.org/) to train and evaluate a convnet --
 a variant of AlexNet -- for this task.
 Assuming you have run `./get_miniplaces.sh` to download and setup the data, and have
-Caffe installed and the PyCaffe module available in your `PYTHONPATH`,
-you should be able to run it by simply doing
+Pytorch installed properly, you should be able to run it by simply doing
 
 ```
 python train_places_net.py
 ```
+
+Note: this code is only assumed to work properly under python 3.6 with PyTorch 3.0.
 
 A log of the output you should get from running this is available
 (see [`log/miniplaces.train_log.txt`](https://github.com/tinghuiz/CS280MiniPlaces/blob/master/log/miniplaces.train_log.txt)).
