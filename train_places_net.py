@@ -54,39 +54,51 @@ args = parser.parse_args()
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = args.deterministic_cudnn
 
-def accumulate_accuracy(output, target, previous=None):
+def accumulate_accuracy(output, target, previous=None, k=5):
     if previous is None:
-        total = correct1 = correct5 = 0
+        total = correct1 = correctk = 0
     else:
-        total, correct1, correct5 = previous
+        total, correct1, correctk = previous
     total += output.size(0)
-    top5 = output.data.cpu().topk(5, 1)[1].numpy()
+    topk = output.data.cpu().topk(k, 1, sorted=True)[1].numpy()  # sorted top k
     if isinstance(target, Variable):
         target = target.data
     target = target.cpu().numpy()
-    correct1 += (top5[:, 0] == target).sum()
-    correct5 += (top5 == target[:, None]).sum()
-    return total, correct1, correct5
+    correct1 += (topk[:, 0] == target).sum()
+    correctk += (topk == target[:, None]).sum()
+    return total, correct1, correctk
 
-def val_net(model, epoch, total_epoch, val_loader):
+def eval_net(model, dataloader, split):
+    dataloader.dataset.eval()  # use eval transform (center crop, no random flip)
     model.eval()  # set model in eval mode (affect layers like dropout)
     stats = None
-    for input, target in val_loader:
+    for _, input, target in dataloader:
         if args.gpus:
             input = input.cuda(args.gpus[0])
         input = Variable(input, volatile=True)
         output = model(input)
         stats = accumulate_accuracy(output, target, stats)
     total, correct1, correct5 = stats
-    print("Val at epoch {epoch}/{total_epoch}:\t"
+    print("Evaluating split \"{split}\":\t"
           "Prec@1: {top1:.2f}%\t"
           "Prec@5: {top5:.2f}%".format(
         top1=correct1 * 100 / float(total), top5=correct5 * 100 / float(total),
-        total_epoch=total_epoch, epoch=epoch))
+        split=split))
 
-def train_net(model, with_val_net=True):
+def save_model(model, epoch):
     if not os.path.exists(args.snapshot_dir):
         os.makedirs(args.snapshot_dir)
+    save_path = os.path.join(args.snapshot_dir,
+                             "{}_epoch_{}.pth".format(args.snapshot_prefix, args.epoch))
+    torch.save(model.state_dict(), save_path)
+
+def load_model(model, epoch):
+    load_path = os.path.join(args.snapshot_dir,
+                             "{}_epoch_{}.pth".format(args.snapshot_prefix, epoch))
+    model.load_state_dict(torch.load(load_path))
+    return model
+
+def train_net(model, with_val_net=True):
     # data loaders
     if with_val_net:
         val_dataset = dataset.MiniplacesDataset('val', args.crop)
@@ -114,15 +126,13 @@ def train_net(model, with_val_net=True):
     # train
     for epoch in range(args.epochs):
         if with_val_net and epoch % 5 == 0:  # test on val every 5 epochs
-            val_net(model, epoch, args.epochs, val_loader)
-        save_path = os.path.join(args.snapshot_dir,
-                                 "{}_epoch_{}.pth".format(args.snapshot_prefix, epoch))
-        torch.save(model.state_dict(), save_path)
+            eval_net(model, val_loader, 'val')
+        save_model(model, epoch)
         scheduler.step()
         model.train()  # set model in training mode (affects layers like dropout)
         stats = None
         time_start = time.time()
-        for iteration, (input, target) in enumerate(train_loader):
+        for iteration, (_, input, target) in enumerate(train_loader):
             time_start = time.time()
             # prepare data (pull to gpu, wrap in Variable)
             if args.gpus:
@@ -153,65 +163,29 @@ def train_net(model, with_val_net=True):
                       top5=correct5 * 100 / float(total)))
             time_start = time_end
 
+    eval_net(model, train_loader, 'train')
     if with_val_net:
-        val_net(model, args.epochs, args.epochs, val_loader)
-    save_path = os.path.join(args.snapshot_dir,
-                             "{}_epoch_{}_final.pth".format(args.snapshot_prefix, args.epochs))
-    torch.save(model.state_dict(), save_path)
+        eval_net(model, val_loader, 'val')
+    save_model(model, args.epochs)
 
-# def eval_net(split, K=5):
-#     print 'Running evaluation for split:', split
-#     filenames = []
-#     labels = []
-#     split_file = get_split(split)
-#     with open(split_file, 'r') as f:
-#         for line in f.readlines():
-#             parts = line.split()
-#             assert 1 <= len(parts) <= 2, 'malformed line'
-#             filenames.append(parts[0])
-#             if len(parts) > 1:
-#                 labels.append(int(parts[1]))
-#     known_labels = (len(labels) > 0)
-#     if known_labels:
-#         assert len(labels) == len(filenames)
-#     else:
-#         # create file with 'dummy' labels (all 0s)
-#         split_file = to_tempfile(''.join('%s 0\n' % name for name in filenames))
-#     test_net_file = miniplaces_net(split_file, train=False, with_labels=False)
-#     weights_file = snapshot_at_iteration(args.iters)
-#     net = caffe.Net(test_net_file, weights_file, caffe.TEST)
-#     top_k_predictions = np.zeros((len(filenames), K), dtype=np.int32)
-#     if known_labels:
-#         correct_label_probs = np.zeros(len(filenames))
-#     offset = 0
-#     while offset < len(filenames):
-#         probs = net.forward()['probs']
-#         for prob in probs:
-#             top_k_predictions[offset] = (-prob).argsort()[:K]
-#             if known_labels:
-#                 correct_label_probs[offset] = prob[labels[offset]]
-#             offset += 1
-#             if offset >= len(filenames):
-#                 break
-#     if known_labels:
-#         def accuracy_at_k(preds, labels, k):
-#             assert len(preds) == len(labels)
-#             num_correct = sum(l in p[:k] for p, l in zip(preds, labels))
-#             return num_correct / len(preds)
-#         for k in [1, K]:
-#             accuracy = 100 * accuracy_at_k(top_k_predictions, labels, k)
-#             print '\tAccuracy at %d = %4.2f%%' % (k, accuracy)
-#         cross_ent_error = -np.log(correct_label_probs).mean()
-#         print '\tSoftmax cross-entropy error = %.4f' % (cross_ent_error, )
-#     else:
-#         print 'Not computing accuracy; ground truth unknown for split:', split
-#     filename = 'top_%d_predictions.%s.csv' % (K, split)
-#     with open(filename, 'w') as f:
-#         f.write(','.join(['image'] + ['label%d' % i for i in range(1, K+1)]))
-#         f.write('\n')
-#         f.write(''.join('%s,%s\n' % (image, ','.join(str(p) for p in preds))
-#                         for image, preds in zip(filenames, top_k_predictions)))
-#     print 'Predictions for split %s dumped to: %s' % (split, filename)
+def test_net(model, split, k=5):
+    dataset = dataset.MiniplacesDataset(split, args.crop)
+    dataset.eval()
+    dataloader = data.DataLoader(dataset, batch_size=1, num_workers=2)  # sequential
+    model.eval()  # set model in eval mode (affect layers like dropout)
+    save_file = 'top_{}_predictions.{}.csv'.format(k, split)
+    with open(save_file, 'w') as f:
+        f.write(','.join(['image'] + ['label%d' % i for i in range(1, k+1)]))
+        f.write('\n')
+        for image, input, target in dataloader:
+            if args.gpus:
+                input = input.cuda(args.gpus[0])
+            input = Variable(input, volatile=True)
+            output = model(input)
+            topk = output.data.cpu().topk(k, 1, sorted=True)[1][0].numpy() # sorted top k
+            f.write(''.join('%s,%s\n' % (image, ','.join(str(p) for p in preds))
+                            for image, preds in zip(filenames, top5)))
+    print('Predictions for split {split} dumped to: %s') % (split, save_file)
 
 if __name__ == '__main__':
     model = models.MiniAlexNet()
@@ -222,8 +196,8 @@ if __name__ == '__main__':
     print('Training net...\n')
     train_net(model)
 
-    # print '\nTraining complete. Evaluating...\n'
-    # for split in ('train', 'val', 'test'):
-    #     eval_net(split)
-    #     print
-    # print 'Evaluation complete.'
+    print('\nTraining complete. Evaluating...\n')
+    for split in ('train', 'val', 'test'):
+        test_net(split)
+        print()
+    print('Evaluation complete.')

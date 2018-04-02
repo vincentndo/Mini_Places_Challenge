@@ -42,7 +42,8 @@ class MiniplacesDataset(data.Dataset):
         self.has_label = len(self.labels) > 0
 
     def __getitem__(self, idx):
-        path = os.path.join(self.image_root, self.images[idx])
+        relative_path = self.images[idx]
+        path = os.path.join(self.image_root, relative_path)
         with open(path, 'rb') as f:
             img = Image.open(f).convert('RGB')
         if self.training:
@@ -50,9 +51,9 @@ class MiniplacesDataset(data.Dataset):
         else:
             tensor = self.eval_transform(img)
         if self.has_label:
-            return tensor, self.labels[idx]
+            return relative_path, tensor, self.labels[idx]
         else:
-            return tensor
+            return relative_path, tensor
 
     def __len__(self):
         return len(self.images)
