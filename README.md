@@ -24,9 +24,9 @@ You can use the included `get_miniplaces.sh` script, or manually grab from
 
 ## Example
 
-This repo provides an [example](https://github.com/tinghuiz/CS280MiniPlaces/blob/master/train_places_net.py)
+This repo provides an [example](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/train_places_net.py)
 of using [PyTorch](http://pytorch.org/) to train and evaluate a convnet --
-a variant of AlexNet -- for this task.
+[a variant of AlexNet](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/models.py) -- for this task.
 Assuming you have run `./get_miniplaces.sh` to download and setup the data, and have
 Pytorch installed properly, you should be able to run it by simply doing
 
@@ -34,34 +34,32 @@ Pytorch installed properly, you should be able to run it by simply doing
 python train_places_net.py
 ```
 
-Note: this code is only assumed to work properly under python 3.6 with PyTorch 3.0.
+Note: this code is only tested to work properly under python 3.6 with PyTorch 3.1. PyTorch 3.1 documentation is available [here](http://pytorch.org/docs/0.3.1/). Note that the documentation on PyTorchwebsite links to the docs for PyTorch github master branch by default. Running this code with PyTorch compiled from github master branch will raise several warnings.
 
 A log of the output you should get from running this is available
-(see [`log/miniplaces.train_log.txt`](https://github.com/tinghuiz/CS280MiniPlaces/blob/master/log/miniplaces.train_log.txt)).
+(see [`log/miniplaces.train_log.txt`](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/log/miniplaces.train_log.txt)).
 The full command used to train and log to the provided file is as follows:
 
 ```
-python -u train_places_net.py --gpu 0 --cudnn >
-    log/miniplaces.train_log.txt 2>&1 &
+python -u train_places_net.py --gpus 0 --val_epoch 5 > log/miniplaces.train_log.txt 2>&1 &
 ```
 
 The `-u` flag tells Python not to buffer the output so you can watch training progress,
 e.g. by doing `tail -f log/miniplaces.train_log.txt`.
-The `--cudnn` flag will create layers that make use of NVIDIA's CuDNN library for faster computation,
-with the slight drawback that results will be somewhat non-deterministic.
+You may specify one or more GPU devices for training using the `--gpus` flag, e.g., `--gpus 0 1`.
 
 At the end of training, the script will measure the model's performance on both the training and validation sets,
 as well as producing a file containing your test set predictions for submission to the evaluation server
 (if you're satisfied with your validation set performance).
 
-The model takes about 1.5 hours to train on a Titan X GPU,
-and achieves 34.25% top 1 accuracy and 64.27% top 5 accuracy on the validation set.
+The model takes about 38 minutes to train on a Titan Xp GPU with CUDA 9 and cuDNN 7,
+and achieves 34.48% top 1 accuracy and 63.57% top 5 accuracy on the validation set.
 See training and evaluation log at `./log/miniplaces.train_log.txt`.
 
-The AWS cloud instances are quite a bit slower, taking roughly ~0.44 seconds per iteration with CuDNN
-for a total of ~6 hours to train for 50K iterations.
-(Without CuDNN, the time more than doubles at ~1 second per iteration.)
-Without a GPU, this training would take around a week (use flag `--gpu -1` if you want to try it).
+The AWS cloud instances are quite a bit slower, taking roughly ~0.44 seconds per iteration with CuDNN # FIXME!
+for a total of ~6 hours to train for 50K iterations. # FIXME!
+(Without CuDNN, the time more than doubles at ~1 second per iteration.) # FIXME!
+Without a GPU, this training would take around a week (use flag `--gpus -1` if you want to try it). #FIXME!
 
 ## Your assignment
 
@@ -105,7 +103,7 @@ Besides these rules, you're mostly free to do whatever you want!
 You will create a text (CSV) file specifying your model's
 top 5 predicted classes (in order of confidence) for each image in the test set,
 and submit this file to an evaluation server for scoring as a deliverable of this assignment.
-A sample is provided in this repo ([`sample_submission.csv`](https://github.com/tinghuiz/CS280MiniPlaces/blob/master/sample_submission.csv)).
+A sample is provided in this repo ([`sample_submission.csv`](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/sample_submission.csv)).
 If you're using the provided Caffe example (`train_places_net.py`),
 the test set predictions are formatted in this manner for you
 and dumped to a file `top_5_predictions.test.csv` after training.
@@ -114,7 +112,7 @@ for the duration of the competition, to avoid allowing overfitting to the test s
 You should primarily use the validation set to measure how your method is performing.
 Scores will be ranked and posted to a leaderboard visible to the class -- healthy competition is encouraged!
 
-The evaluation server is hosted in [Kaggle](https://inclass.kaggle.com/c/cs280-mini-places). You should be able to make submissions once you link your account to a berkeley.edu email address. Note that due to limitations of Kaggle's built-in evaluation system, the leaderboard is ranked based on the top-1 (instead of top-5) accuracy. 
+The evaluation server is hosted in [Kaggle](https://inclass.kaggle.com/c/cs280-mini-places). You should be able to make submissions once you link your account to a berkeley.edu email address. Note that due to limitations of Kaggle's built-in evaluation system, the leaderboard is ranked based on the top-1 (instead of top-5) accuracy.
 
 ## Deliverables
 

@@ -24,12 +24,12 @@ class MiniAlexNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(384, 384, kernel_size=3, padding=1, groups=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(384, 256, kernel_size=3, padding=1, groups=2),
+            nn.Conv2d(384, 1024, kernel_size=3, padding=1, groups=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
         self.fc = nn.Sequential(
-            nn.Linear(256, 1024),
+            nn.Linear(1024, 1024),
             nn.ReLU(inplace=True),
             nn.Dropout(),
             nn.Linear(1024, 1024),
