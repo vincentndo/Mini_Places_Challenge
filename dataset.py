@@ -51,7 +51,7 @@ class MiniplacesDataset(data.Dataset):
         path = self.images[idx]
         with open(path, 'rb') as f:
             img = Image.open(f).convert('RGB')
-        tensor = self.transform(img)
+        tensor = self.transform(img)# * 255 - torch.Tensor([123, 117, 104]).view(3, 1, 1)
         if self.split == 'test':
             return tensor
         else:

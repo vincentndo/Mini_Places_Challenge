@@ -37,6 +37,22 @@ class MiniAlexNet(nn.Module):
             nn.Dropout(),
             nn.Linear(1024, 100),
         )
+        self.init_model()
+
+    def init_model(self):
+        def weights_init(m):
+            classname = m.__class__.__name__
+            if classname.find('Conv') != -1:
+                nn.init.kaiming_normal(m.weight.data)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif classname == 'Linear':
+                nn.init.normal(m.weight.data, std=0.005)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+
+        self.apply(weights_init)
+        return self
 
     def forward(self, input):
         features = self.conv(input)

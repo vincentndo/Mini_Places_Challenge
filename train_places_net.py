@@ -46,33 +46,43 @@ parser.add_argument('--seed', type=int, default=1,
     help='Seed for the random number generator')
 parser.add_argument('--deterministic_cudnn', action='store_true',
     help='Do not use CuDNN -- usually faster, but non-deterministic')
-parser.add_argument('--gpu', type=int, default=0,
-    help='GPU ID to use for training and inference (-1 for CPU)')
+parser.add_argument('--gpus', type=int, nargs='+', default=[0],
+    help='GPU IDs to use for training and inference '
+         '(empty for CPU, i.e., just --gpus with no numbers following)')
 args = parser.parse_args()
 
 torch.manual_seed(args.seed)
 torch.backends.cudnn.deterministic = args.deterministic_cudnn
 
+def accumulate_accuracy(output, target, previous=None):
+    if previous is None:
+        total = correct1 = correct5 = 0
+    else:
+        total, correct1, correct5 = previous
+    total += output.size(0)
+    top5 = output.data.cpu().topk(5, 1)[1].numpy()
+    if isinstance(target, Variable):
+        target = target.data
+    target = target.cpu().numpy()
+    correct1 += (top5[:, 0] == target).sum()
+    correct5 += (top5 == target[:, None]).sum()
+    return total, correct1, correct5
 
 def val_net(model, epoch, total_epoch, val_loader):
-    model.eval()
-    total = correct1 = correct5 = 0
+    model.eval()  # set model in eval mode (affect layers like dropout)
+    stats = None
     for input, target in val_loader:
-        if args.gpu >= 0:
-            input = input.cuda(args.gpu)
+        if args.gpus:
+            input = input.cuda(args.gpus[0])
         input = Variable(input, volatile=True)
-        target = target.numpy()
         output = model(input)
-        top5 = output.topk(5, 1)[1].data.cpu().numpy()
-        correct1 += (top5[:, 0] == target).sum()
-        correct5 += (top5 == target[:, None]).sum()
-        total += input.size(0)
-    print("Epoch {epoch}/{total_epoch}:\t"
-          "Top 1 accuracy: {top1_p:.2f}% ({top1}/{total})\t"
-          "Top 5 accuracy: {top5_p:.2f}% ({top5}/{total})".format(
-        top1_p=correct1 * 100 / float(total), top1=correct1,
-        top5_p=correct5 * 100 / float(total), top5=correct5,
-        total=total, epoch=epoch, total_epoch=total_epoch))
+        stats = accumulate_accuracy(output, target, stats)
+    total, correct1, correct5 = stats
+    print("Val at epoch {epoch}/{total_epoch}:\t"
+          "Prec@1: {top1:.2f}%\t"
+          "Prec@5: {top5:.2f}%".format(
+        top1=correct1 * 100 / float(total), top5=correct5 * 100 / float(total),
+        total_epoch=total_epoch, epoch=epoch))
 
 def train_net(model, with_val_net=True):
     if not os.path.exists(args.snapshot_dir):
@@ -80,12 +90,24 @@ def train_net(model, with_val_net=True):
     # data loaders
     if with_val_net:
         val_dataset = dataset.MiniplacesDataset('val', args.crop)
-        val_loader = data.DataLoader(val_dataset, batch_size=100, shuffle=True, num_workers=4)
+        val_loader = data.DataLoader(val_dataset, batch_size=100, num_workers=4)
     train_dataset = dataset.MiniplacesDataset('train', args.crop)
     train_loader = data.DataLoader(train_dataset, batch_size=args.batch, shuffle=True, num_workers=4)
     # optimizer and lr scheduler
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum,
-                    weight_decay=args.weight_decay)
+    # seaprate weights and bias so we can double lr and have 0 decay for bias
+    weights = []
+    biases = []
+    for name, param in model.named_parameters():
+        if name.endswith('weight'):
+            weights.append(param)
+        elif name.endswith('bias'):
+            biases.append(param)
+        else:
+            raise ValueError('unexpected parameter ' + name)
+    optimizer = optim.SGD([
+            dict(params=weights, lr=args.lr, weight_decay=args.weight_decay),
+            dict(params=biases, lr=args.lr * 2, weight_decay=0),
+        ], momentum=args.momentum)
     scheduler = optim.lr_scheduler.StepLR(optimizer, args.step_size, gamma=args.gamma)
     # loss
     criterion = nn.CrossEntropyLoss()
@@ -97,13 +119,14 @@ def train_net(model, with_val_net=True):
                                  "{}_epoch_{}.pth".format(args.snapshot_prefix, epoch))
         torch.save(model.state_dict(), save_path)
         scheduler.step()
-        model.train()
+        model.train()  # set model in training mode (affects layers like dropout)
+        stats = None
         for iteration, (input, target) in enumerate(train_loader):
             time_start = time.time()
             # prepare data (pull to gpu, wrap in Variable)
-            if args.gpu >= 0:
-                input = input.cuda(args.gpu)
-                target = target.cuda(args.gpu)
+            if args.gpus:
+                input = input.cuda(args.gpus[0])
+                target = target.cuda(args.gpus[0])
             input = Variable(input)
             target = Variable(target)
             # train step
@@ -112,14 +135,21 @@ def train_net(model, with_val_net=True):
             loss = criterion(output, target)
             loss.backward()   # compute gradient
             optimizer.step()  # optimizer step
+            stats = accumulate_accuracy(output, target)
             time_used = time.time() - time_start
             if (args.disp > 0) and (iteration % args.disp == 0):
+                total, correct1, correct5 = stats
+                stats = None
                 print("Epoch {epoch}/{total_epoch}:\t"
                       "Iteration {it}/{total_it} ({time:.2f} s/it)\t"
-                      "Loss: {loss:.4f}\t".format(
+                      "Loss: {loss:.4f}\t"
+                      "Prec@1: {top1:.2f}%\t"
+                      "Prec@5: {top5:.2f}%".format(
                       epoch=epoch, total_epoch=args.epochs,
                       it=iteration, total_it=len(train_loader),
-                      time=time_used, loss = loss.data[0]))
+                      time=time_used, loss=loss.data[0],
+                      top1=correct1 * 100 / float(total),
+                      top5=correct5 * 100 / float(total)))
 
     if with_val_net:
         val_net(model, args.epochs, args.epochs, val_loader)
@@ -183,8 +213,10 @@ def train_net(model, with_val_net=True):
 
 if __name__ == '__main__':
     model = models.MiniAlexNet()
-    if args.gpu >= 0:
-        model = model.cuda(args.gpu)
+    if args.gpus:
+        model = model.cuda(args.gpus[0])
+        if len(args.gpus) > 1:
+            model = nn.DataParallel(model, args.gpus)
     print('Training net...\n')
     train_net(model)
 
