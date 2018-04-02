@@ -17,6 +17,13 @@ fi
 # create test data file test.txt
 pushd development_kit/data
 cp val.txt test.txt
-sed -i 's/^val/test/' test.txt
-sed -i 's/ .*$//' test.txt
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    # Mac OSX
+    sed -i '' 's/^val/test/' test.txt
+    sed -i '' 's/ .*$//' test.txt
+else
+    # assume Linux
+    sed -i 's/^val/test/' test.txt
+    sed -i 's/ .*$//' test.txt
+fi
 popd

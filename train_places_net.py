@@ -28,7 +28,7 @@ parser.add_argument('--snapshot_dir', default='./snapshots',
     help='Path to directory where snapshots are saved')
 parser.add_argument('--snapshot_prefix', default='place_net',
     help='Snapshot filename prefix')
-parser.add_argument('--epochs', type=int, default=128,
+parser.add_argument('--epochs', type=int, default=130,
     help='Total number of epochs to train the network')
 parser.add_argument('--batch', type=int, default=256,
     help='The batch size to use for training')
@@ -36,7 +36,7 @@ parser.add_argument('--lr', type=float, default=0.01,
     help='The initial learning rate')
 parser.add_argument('--gamma', type=float, default=0.1,
     help='Factor by which to drop the learning rate')
-parser.add_argument('--step_size', type=int, default=25,
+parser.add_argument('--step_size', type=int, default=26,
     help='Drop the learning rate every N epochs -- this specifies N')
 parser.add_argument('--momentum', type=float, default=0.9,
     help='The momentum hyperparameter to use for momentum SGD')
@@ -113,7 +113,7 @@ def train_net(model, with_val_net=True):
     criterion = nn.CrossEntropyLoss()
     # train
     for epoch in range(args.epochs):
-        if with_val_net and epoch % 1 == 0:  # test on val every 5 epochs
+        if with_val_net and epoch % 5 == 0:  # test on val every 5 epochs
             val_net(model, epoch, args.epochs, val_loader)
         save_path = os.path.join(args.snapshot_dir,
                                  "{}_epoch_{}.pth".format(args.snapshot_prefix, epoch))
@@ -121,6 +121,7 @@ def train_net(model, with_val_net=True):
         scheduler.step()
         model.train()  # set model in training mode (affects layers like dropout)
         stats = None
+        time_start = time.time()
         for iteration, (input, target) in enumerate(train_loader):
             time_start = time.time()
             # prepare data (pull to gpu, wrap in Variable)
@@ -136,7 +137,7 @@ def train_net(model, with_val_net=True):
             loss.backward()   # compute gradient
             optimizer.step()  # optimizer step
             stats = accumulate_accuracy(output, target)
-            time_used = time.time() - time_start
+            time_end = time.time()
             if (args.disp > 0) and (iteration % args.disp == 0):
                 total, correct1, correct5 = stats
                 stats = None
@@ -147,9 +148,10 @@ def train_net(model, with_val_net=True):
                       "Prec@5: {top5:.2f}%".format(
                       epoch=epoch, total_epoch=args.epochs,
                       it=iteration, total_it=len(train_loader),
-                      time=time_used, loss=loss.data[0],
+                      time=time_end - time_start, loss=loss.data[0],
                       top1=correct1 * 100 / float(total),
                       top5=correct5 * 100 / float(total)))
+            time_start = time_end
 
     if with_val_net:
         val_net(model, args.epochs, args.epochs, val_loader)
