@@ -71,8 +71,7 @@ Besides that rule, you're free to try whatever techniques you've heard of in and
 and of course free to think up new ones.
 We're excited to see what you come up with!
 
-You're encouraged to use Caffe as the provided example is done in Caffe,
-and the instructors are more equipped to help you out with it,
+You're encouraged to use PyTorch as the provided example is done in PyTorch (check the official tutorial [here](http://pytorch.org/),
 but you're free to use any software you like, and furthermore you're
 free to design your model and learning schemes however you like.
 (Don't buy this whole "deep learning" craze? Hand-engineer away!)
@@ -99,7 +98,7 @@ You will create a text (CSV) file specifying your model's
 top 5 predicted classes (in order of confidence) for each image in the test set,
 and submit this file to an evaluation server for scoring as a deliverable of this assignment.
 A sample is provided in this repo ([`sample_submission.csv`](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/sample_submission.csv)).
-If you're using the provided Caffe example (`train_places_net.py`),
+If you're using the provided PyTorch example (`train_places_net.py`),
 the test set predictions are formatted in this manner for you
 and dumped to a file `top_5_predictions.test.csv` after training.
 You will be limited to a small number of submissions to the evaluation server
