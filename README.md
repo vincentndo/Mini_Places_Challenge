@@ -56,11 +56,6 @@ The model takes about 38 minutes to train on a Titan Xp GPU with CUDA 9 and cuDN
 and achieves 34.48% top 1 accuracy and 63.57% top 5 accuracy on the validation set.
 See training and evaluation log at `./log/miniplaces.train_log.txt`.
 
-The AWS cloud instances are quite a bit slower, taking roughly ~0.44 seconds per iteration with CuDNN # FIXME!
-for a total of ~6 hours to train for 50K iterations. # FIXME!
-(Without CuDNN, the time more than doubles at ~1 second per iteration.) # FIXME!
-Without a GPU, this training would take around a week (use flag `--gpus -1` if you want to try it). #FIXME!
-
 ## Your assignment
 
 You should consider the result from the provided example as a baseline
@@ -141,19 +136,19 @@ If you don't have access to your own CUDA-capable GPU and would like to train mo
 you can use GPU instances via AWS's EC2 service.
 [AWS Educate](https://aws.amazon.com/education/awseducate/)
 provides $100 worth of free credits per year to Berkeley students,
-which is enough for roughly a week's worth of GPU instance use (g2.2xlarge instance type).
+which is enough for roughly a week's worth of GPU instance use (g2.2xlarge/p2.xlarge instance type).
 You should be careful to turn off your GPU instance(s)
 when not in use for training to get the most out of your credits and maximize GPU time.
 Consider working on designing your model elsewhere,
 e.g., on a GPU-less AWS instance or on your own machine.
 
-See [this document](https://docs.google.com/document/d/1pftupvlGWsJYqfm1wOShj95Ye_sqEm0yP_JVsc4mYJk/edit)
-for detailed AWS and AWS Educate signup instructions and
-pointers to the image preloaded with Caffe and the data for this assignment.
+See [this document](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/NVIDIA_AWS%20Educate%20Student%20Onboard.pdf)
+for AWS Educate signup instructions. Initially, your instance limit for g2.2xlarge and p2.xlarge instance will be 0 (login to AWS dashboard, go to EC2 tab, then you can find limits tab on the left side).
+You need to click ``requst instance limit`` to increase your GPU instance to 1. 
 
-If using the machine image mentioned in that document, once you connect to the instance,
-Caffe is preinstalled and the data is pre-loaded.
-You should be able to get started and run the example immediately by doing
+Make sure you always choose to contact AWS by phone, which is the fast way.
+
+When creating an instance, make sure you choose an environment that with CuDNN and pytorch pre-installed. Then you need to clone the github repo to get started and run the example immediately by doing
 ```
 $ cd CS280MiniPlaces
 $ python train_places_net.py --cudnn --iters 100 # just train for 100 iterations to make sure everything works; remove '--iters 100' to do the full training
