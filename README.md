@@ -112,7 +112,7 @@ for the duration of the competition, to avoid allowing overfitting to the test s
 You should primarily use the validation set to measure how your method is performing.
 Scores will be ranked and posted to a leaderboard visible to the class -- healthy competition is encouraged!
 
-The evaluation server is hosted in [Kaggle](https://inclass.kaggle.com/c/cs280-mini-places). You should be able to make submissions once you link your account to a berkeley.edu email address. Note that due to limitations of Kaggle's built-in evaluation system, the leaderboard is ranked based on the top-1 (instead of top-5) accuracy.
+The evaluation server is hosted in [Kaggle](https://www.kaggle.com/c/berkeley-cs280-backup-project). You should be able to make submissions once you link your account to a berkeley.edu email address. Note that due to limitations of Kaggle's built-in evaluation system, the leaderboard is ranked based on the top-1 (instead of top-5) accuracy.
 
 ## Deliverables
 
