@@ -51,7 +51,7 @@ The model takes about 38 minutes to train on a Titan Xp GPU with CUDA 9 and cuDN
 and achieves 34.48% top 1 accuracy and 63.57% top 5 accuracy on the validation set.
 See training and evaluation log at `./log/miniplaces.train_log.txt`.
 
-## Your assignment
+## Your Task
 
 You should consider the result from the provided example as a baseline
 and try to come up with a model that does significantly better on this task.
@@ -70,6 +70,17 @@ You're encouraged to use PyTorch as the provided example is done in PyTorch (che
 but you're free to use any software you like, and furthermore you're
 free to design your model and learning schemes however you like.
 (Don't buy this whole "deep learning" craze? Hand-engineer away!)
+
+If you are interested in more things, feel free to analyze the one or more of the following (you will get extra credits!):
+
+- Download the CIFAR-10 dataset, train a model from scratch. Compare the results with a model pre-trained on the mini-places dataset.
+
+- Instead of learning features on an image classification task, *self-supervised* learning is a mechanism for learning features by performing a pretext task that doesnot involves labels. For e.g., you can simply rotate images by [0, -90, 90, 180] and predict the rotation. You can now compare the performance of such a network against a model pre-trained on mini-places on the task of classifying CIFAR-10 images. Can you come up with other such pre-text tasks? 
+
+- In the mini-places training set, make the training labels noisy (i.e. randomly change x% labels). How do the values of x =10, 20, 50 affect the performance on testing set? You might also want to evaluate transfer performance on CIFAR-10. Can you come up with ways to make the training robust to noise? 
+
+- Getting annotations is expensive. Is it possible to achieve the same performance as using all labeled data, but by only using a subset of labelled examples? One idea is to first train a model with x% of the data. We will use this model to select for which images we require labels. One heuristic to chose such images is where the confidence of the model is closer to 0.5. There are many other heuristics one can chose. If you are interested in exploring this further, contact the course instructors.  
+
 
 ## Competition rules
 
