@@ -1,32 +1,27 @@
 # Mini Places Challenge
 
-Due: Wednesday, Apr 22, 2018, 11:59pm
+Due Date: See the deadline for project in course announcements. 
 
-This is Homework 4 for Computer Vision (CS 280) at UC Berkeley.
+You must work alone on this project.
 
-The assignment is to build and train a scene classifier for images.
+In this project we will train a scene classifier for images.
 The dataset we'll use is the MIT Mini Places dataset,
 consisting of images from one of 100 scene categories.
 It's a subset of the much larger MIT [Places2](http://places2.csail.mit.edu/) dataset.
 The training set of the Mini Places dataset has 100,000 images;
 the validation and test sets have 10,000 images each.
 
-You can work alone or in teams of 2-3.
-You're encouraged to work in teams to pool your GPU resources
-(especially if you'll be using cloud instances rather than your own GPU(s)).
 
 ## Data
 
-If you aren't using a cloud GPU instance (will be preloaded with the data)
-download the dataset and development kit.
 You can use the included `get_miniplaces.sh` script, or manually grab from
 [here](http://dl.caffe.berkeleyvision.org/mit_mini_places/).
 
 ## Example
 
-This repo provides an [example](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/train_places_net.py)
+This repo provides an [example](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/train_places_net.py)
 of using [PyTorch](http://pytorch.org/) to train and evaluate a convnet --
-[a variant of AlexNet](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/models.py) -- for this task.
+[a variant of AlexNet](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/models.py) -- for this task.
 Assuming you have run `./get_miniplaces.sh` to download and setup the data, and have
 Pytorch installed properly, you should be able to run it by simply doing
 
@@ -37,7 +32,7 @@ python train_places_net.py
 Note: this code is only tested to work properly under python 3.6 with PyTorch 3.1. PyTorch 3.1 documentation is available [here](http://pytorch.org/docs/0.3.1/). Note that the documentation on PyTorchwebsite links to the docs for PyTorch github master branch by default. Running this code with PyTorch compiled from github master branch will raise several warnings.
 
 A log of the output you should get from running this is available
-(see [`log/miniplaces.train_log.txt`](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/log/miniplaces.train_log.txt)).
+(see [`log/miniplaces.train_log.txt`](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/log/miniplaces.train_log.txt)).
 The full command used to train and log to the provided file is as follows:
 
 ```
@@ -97,7 +92,7 @@ Besides these rules, you're mostly free to do whatever you want!
 You will create a text (CSV) file specifying your model's
 top 5 predicted classes (in order of confidence) for each image in the test set,
 and submit this file to an evaluation server for scoring as a deliverable of this assignment.
-A sample is provided in this repo ([`sample_submission.csv`](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/sample_submission.csv)).
+A sample is provided in this repo ([`sample_submission.csv`](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/sample_submission.csv)).
 If you're using the provided PyTorch example (`train_places_net.py`),
 the test set predictions are formatted in this manner for you
 and dumped to a file `top_5_predictions.test.csv` after training.
@@ -110,12 +105,14 @@ The evaluation server is hosted in [Kaggle](https://www.kaggle.com/c/berkeley-cs
 
 ## Deliverables
 
-Your team should submit to the evaluation server at least one set of test set predictions
+Your should submit to the evaluation server at least one set of test set predictions
 from a model that you implemented and trained.
 
-Your team should also prepare a short report (1-4 page PDF, not including references), with:
+Your grade will depend on how you perform 
 
-  - Your team's name on the evaluation server, and the names of all team members
+In your report include, 
+
+  - Your team's name on the evaluation server.
   - Details on how you designed and trained your best model(s),
     and other things you tried that didn't work as well
   - A couple bits of experimental and/or analytical analysis, e.g.,
@@ -141,7 +138,7 @@ when not in use for training to get the most out of your credits and maximize GP
 Consider working on designing your model elsewhere,
 e.g., on a GPU-less AWS instance or on your own machine.
 
-See [this document](https://github.com/jxwuyi/CS280_SP18_HW4/blob/master/NVIDIA_AWS%20Educate%20Student%20Onboard.pdf)
+See [this document](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/NVIDIA_AWS%20Educate%20Student%20Onboard.pdf)
 for AWS Educate signup instructions. Initially, your instance limit for g2.2xlarge and p2.xlarge instance will be 0 (login to AWS dashboard, go to EC2 tab, then you can find limits tab on the left side).
 You need to click ``requst instance limit`` to increase your GPU instance to 1. 
 
@@ -158,6 +155,6 @@ Sometimes it helps to run the above `python` command once, wait a bit for traini
 
 ## Acknowledgements
 
-This assignment was "heavily inspired" by the [MIT assignment](http://6.869.csail.mit.edu/fa15/project.html).
-Thanks to all of the instructors for creating this assignment and challenge dataset,
+This project is "heavily inspired" by the [MIT assignment](http://6.869.csail.mit.edu/fa15/project.html).
+Thanks to all of the instructors for creating this challenge dataset,
 with special thanks to Bolei Zhou and Prof. Aude Oliva for all their help getting us set up!
