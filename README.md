@@ -102,11 +102,13 @@ Besides these rules, you're mostly free to do whatever you want!
 
 You will create a text (CSV) file specifying your model's
 top 5 predicted classes (in order of confidence) for each image in the test set,
-and submit this file to an evaluation server for scoring as a deliverable of this assignment.
+and submit this file to an evaluation server for scoring as a deliverable of this project.
+
 A sample is provided in this repo ([`sample_submission.csv`](https://github.com/pulkitag/CS280_SP18_Fallback_Project/blob/master/sample_submission.csv)).
 If you're using the provided PyTorch example (`train_places_net.py`),
 the test set predictions are formatted in this manner for you
 and dumped to a file `top_5_predictions.test.csv` after training.
+
 You will be limited to a small number of submissions to the evaluation server
 for the duration of the competition, to avoid allowing overfitting to the test set.
 You should primarily use the validation set to measure how your method is performing.
