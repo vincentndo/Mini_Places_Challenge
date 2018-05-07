@@ -67,7 +67,7 @@ else:
         cpu |= device == -1
         if device not in devices:
             raise ValueError('Unexpected device ID in --gpus. '
-                             'Should be one of {}'.format(', '.join(devices)))
+                             'Should be one of {}'.format(', '.join(map(str, devices))))
     if cpu and len(args.gpus) > 1:
         raise ValueError('Cannot use both GPU and CPU simultaneously in --gpus')
 
@@ -92,12 +92,12 @@ def eval_net(model, dataloader, split):
     dataloader.dataset.eval()  # use eval transform (center crop, no random flip)
     model.eval()  # set model in eval mode (affect layers like dropout)
     stats = None
-    for _, input, target in dataloader:
-        if args.gpus:
-            input = input.cuda(args.gpus[0])
-        input = Variable(input, volatile=True)
-        output = model(input)
-        stats = accumulate_accuracy(output, target, stats)
+    with torch.no_grad():
+        for _, input, target in dataloader:
+            if args.gpus:
+                input = input.cuda(args.gpus[0])
+            output = model(input)
+            stats = accumulate_accuracy(output, target, stats)
     total, correct1, correct5 = stats
     print("Evaluating split \"{split}\"...\t"
           "Prec@1: {top1:.2f}%\t"
@@ -184,13 +184,13 @@ def train_net(model):
                       "Prec@5: {top5:.2f}%".format(
                       epoch=epoch, total_epoch=args.epochs,
                       it=iteration, total_it=len(train_loader),
-                      time=time_end - time_start, loss=loss.data[0],
+                      time=time_end - time_start, loss=loss.data.item(),
                       top1=correct1 * 100 / float(total),
                       top5=correct5 * 100 / float(total)))
             time_start = time_end
 
     eval_net(model, train_loader, 'train')
-    if with_val_net:
+    if args.val_epoch:
         eval_net(model, val_loader, 'val')
     save_model(model, args.epochs)
 
@@ -203,13 +203,13 @@ def test_net(model, k=5):
     with open(save_file, 'w') as f:
         f.write(','.join(['image'] + ['label%d' % i for i in range(1, k+1)]))
         f.write('\n')
-        for image, input in dataloader:
-            if args.gpus:
-                input = input.cuda(args.gpus[0])
-            input = Variable(input, volatile=True)
-            output = model(input)
-            topk = output.data.cpu().topk(k, 1, sorted=True)[1][0].numpy() # sorted top k
-            f.write('{},{}\n'.format(image[0], ','.join(str(p) for p in topk)))
+        with torch.no_grad():
+            for image, input in dataloader:
+                if args.gpus:
+                    input = input.cuda(args.gpus[0])
+                output = model(input)
+                topk = output.data.cpu().topk(k, 1, sorted=True)[1][0].numpy() # sorted top k
+                f.write('{},{}\n'.format(image[0], ','.join(str(p) for p in topk)))
     print('Predictions for split "test" dumped to: {}'.format(save_file))
 
 if __name__ == '__main__':
@@ -223,4 +223,3 @@ if __name__ == '__main__':
     print('\nTraining complete. Evaluating...\n')
     test_net(model)
     print('Evaluation complete.')
-
