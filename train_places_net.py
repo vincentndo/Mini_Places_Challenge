@@ -213,7 +213,8 @@ def test_net(model, k=5):
     print('Predictions for split "test" dumped to: {}'.format(save_file))
 
 if __name__ == '__main__':
-    model = models.MiniAlexNet()
+    # model = models.MiniAlexNet()
+    model = models.MiniZFNet()
     if args.gpus:
         model = model.cuda(args.gpus[0])
         if len(args.gpus) > 1:

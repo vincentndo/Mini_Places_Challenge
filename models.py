@@ -58,3 +58,59 @@ class MiniAlexNet(nn.Module):
         features = self.conv(input)
         features = features.view(input.size(0), -1)  # flatten to a 2d tensor
         return self.fc(features)
+
+
+class MiniZFNet(nn.Module):
+    """
+    A mini version of ZF net
+    """
+    def __init__(self):
+        super(MiniZFNet, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(3, 96, kernel_size=5, stride=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(96, 256, kernel_size=5),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(256, 384, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 384, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(384, 512, kernel_size=3),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.Conv2d(512, 1024, kernel_size=2),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2),
+            )
+        self.fc = nn.Sequential(
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 100),
+            )
+        self.init_model()
+
+    def init_model(self):
+        def weights_init(m):
+            classname = m.__class__.__name__
+            if classname.find('Conv') != -1:
+                nn.init.kaiming_normal_(m.weight.data)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+            elif classname == "Linear":
+                nn.init.normal_(m.weight.data, std=0.005)
+                if m.bias is not None:
+                    m.bias.data.zero_()
+
+        self.apply(weights_init)
+        return self
+
+    def forward(self, input):
+        features = self.conv(input)
+        features = features.view(input.size(0), -1)
+        return self.fc(features)
