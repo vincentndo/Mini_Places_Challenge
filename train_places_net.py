@@ -14,6 +14,7 @@ from torch import nn
 import torch.optim as optim
 from torch.autograd import Variable
 import torch.utils.data as data
+import resnet
 
 parser = argparse.ArgumentParser(
     description='Train and evaluate a net on the MIT mini-places dataset.')
@@ -214,7 +215,12 @@ def test_net(model, k=5):
 
 if __name__ == '__main__':
     # model = models.MiniAlexNet()
-    model = models.MiniZFNet()
+    # model = models.MiniZFNet()
+    # model = resnet.resnet18()
+    # model = resnet.resnet34()
+    # model = resnet.resnet50()
+    # model = resnet.resnet101()
+    model = resnet.resnet152()
     if args.gpus:
         model = model.cuda(args.gpus[0])
         if len(args.gpus) > 1:
